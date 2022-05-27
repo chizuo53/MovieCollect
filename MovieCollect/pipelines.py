@@ -1,0 +1,67 @@
+# Define your item pipelines here
+#
+# Don't forget to add your pipeline to the ITEM_PIPELINES setting
+# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+
+
+# useful for handling different item types with a single interface
+
+
+import logging
+import os
+import hashlib
+import json
+from itemadapter import ItemAdapter
+
+from scrapy.utils.python import to_bytes
+from scrapy.pipelines.images import ImagesPipeline
+from scrapy.exceptions import DropItem
+
+from MovieCollect.items import MovieItem, MovieLinkItem
+
+from MovieCollect.custom.database import SpiderMongo
+
+
+logger = logging.getLogger(__name__)
+
+class MovieImagesPipeline(ImagesPipeline):
+
+    def file_path(self, request, response=None, info=None, *, item=None):
+        spidername = item.get('spidername')
+        image_guid = hashlib.sha1(to_bytes(request.url)).hexdigest()
+        return f'/{spidername}/full/{image_guid}.jpg'
+
+    def item_completed(self, results, item, info):
+        if results:
+            if results[0][0]:
+                image_path = results[0][1]['path']
+            else:
+                image_path = info.spider.settings.get('DEFAULT_POST_IMG')
+            ItemAdapter(item)[self.images_result_field] = image_path
+        return item
+
+
+class MoviePipeline:
+
+    def open_spider(self, spider):
+        self.spider_mongo = SpiderMongo(spider.settings)
+
+    async def process_item(self, item, spider):
+        if isinstance(item, MovieItem):
+            movieidentity, spidername, moviename, movieurl, post = item['movieidentity'], spider.name, item['moviename'], item['movieurl'], item['images']
+            result = await self.spider_mongo.add_movie(movieidentity, spidername, moviename, movieurl, post)
+            raise DropItem(f"Finished add movie")
+        else:
+            return item
+
+
+class MovieLinkPipeline(MoviePipeline):
+
+    async def process_item(self, item, spider):
+        if isinstance(item, MovieLinkItem):
+            movieidentity, playername, linkname, linkurl, valid = item['movieidentity'], item['playername'], item['linkname'], item['linkurl'], item['valid']
+            result = await self.spider_mongo.add_movie_link(movieidentity, playername, linkname, linkurl, valid)
+            raise DropItem(f"Finished add movie link")
+        else:
+            return item
+
