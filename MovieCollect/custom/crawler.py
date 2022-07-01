@@ -6,7 +6,7 @@ from twisted.internet import defer, task
 from twisted.python.failure import Failure
 from scrapy import signals, Spider
 from scrapy.extension import ExtensionManager
-from scrapy.settings import overridden_settings
+from scrapy.settings import overridden_settings, Settings
 from scrapy.signalmanager import SignalManager
 from scrapy.utils.defer import deferred_from_coro
 from scrapy.utils.misc import load_object
@@ -85,8 +85,9 @@ class AutoCrawler(Crawler):
 
     @defer.inlineCallbacks
     def stop(self):
-        self.terminate = True
-        yield super().stop()
+        if not self.terminate:
+            self.terminate = True
+            yield super().stop()
 
 
 class AutoCrawlerProcess(CrawlerProcess):
@@ -122,6 +123,7 @@ class AutoCrawlerProcess(CrawlerProcess):
         root_filter = RootFilter()
         root_handler.addFilter(root_filter)
 
+        self.running_crawlers = {}
         self.spider_mongo = SpiderMongo(self.settings)
         self.status_finder = StatusFinder(self)
         self.status_performer = StatusPerformer(self)
@@ -142,7 +144,7 @@ class AutoCrawlerProcess(CrawlerProcess):
         logger.debug('Start to get spiders those are in user status')
         self._change_spider_status = True
         user_status_spiders = yield deferred_from_coro(self.status_finder.get_user_status_spiders())
-        yield self.status_performer.perform(user_status_spiders)
+        self.status_performer.perform(user_status_spiders)
         self._change_spider_status = False
 
     def stop(self):
@@ -155,7 +157,7 @@ class AutoCrawlerProcess(CrawlerProcess):
             self.spider_mongo.close
             return _
 
-        d = super().stop()
+        d = defer.DeferredList([c.stop() for c in self.running_crawlers.values()])
         d.addBoth(close_mongo)
         return d
 

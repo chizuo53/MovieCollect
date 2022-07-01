@@ -59,8 +59,8 @@ class SpiderMongo:
         result = await self.crawl_status_coll.update_one({'storetype':'crawling_or_crawled_spider'}, {'$push':{'crawlset':spidername}}, upsert=True)
 
     @crud_error_catcher.dcatcher
-    async def change_spider_status(self, spider_name, status, message):
-        result = await self.spider_detail_coll.update_one({'spidername':spider_name}, {'$set':{'status':status, 'message':message}}, upsert=False)
+    async def change_spider_status(self, spider_name, status, comment):
+        result = await self.spider_detail_coll.update_one({'spidername':spider_name}, {'$set':{'status':status, 'comment':comment}}, upsert=False)
         return result
 
     @crud_error_catcher.dcatcher
@@ -97,8 +97,8 @@ class SpiderMongo:
 
     @crud_error_catcher.dcatcher
     async def get_spider_code(self, spidername):
-        result = await self.spider_detail_coll.findne({'spidername':spidername}, {'_id':0, 'code':1})
-        return result
+        result = await self.spider_detail_coll.find_one({'spidername':spidername}, {'_id':0, 'code':1})
+        return result['code']
 
     def close(self):
         self.conn.close

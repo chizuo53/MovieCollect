@@ -9,18 +9,11 @@ from scrapy.interfaces import ISpiderLoader
 from scrapy.utils.spider import iter_spider_classes
 
 from MovieCollect.custom.database import SpiderMongo
-from MovieCollect.custom.db_import import DBMetaFinder
+from MovieCollect.custom.db_importer import code_cacher, database_module_prefix
 from MovieCollect.custom.utils.exceptions import SpiderNotFoundError
 
 logger = logging.getLogger(__name__)
 
-code_cacher = {}
-
-database_module_prefix = 'database_'
-
-database_meta_finder = DBMetaFinder(database_module_prefix, code_cacher)
-
-sys.meta_path.insert(0, database_meta_finder)
 
 @implementer(ISpiderLoader)
 class SpiderLoader:
@@ -30,7 +23,6 @@ class SpiderLoader:
     """
 
     def __init__(self, settings):
-        self.spider_modules = settings.getlist('SPIDER_MODULES')
         self.spider_mongo = SpiderMongo(settings)
         self._spiders = {}
 

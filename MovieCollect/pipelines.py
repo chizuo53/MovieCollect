@@ -8,9 +8,8 @@
 
 
 import logging
-import os
 import hashlib
-import json
+import os
 from itemadapter import ItemAdapter
 
 from scrapy.utils.python import to_bytes
@@ -37,6 +36,7 @@ class MovieImagesPipeline(ImagesPipeline):
                 image_path = results[0][1]['path']
             else:
                 image_path = info.spider.settings.get('DEFAULT_POST_IMG')
+            image_path = os.path.join('/post', image_path.lstrip('/'))
             ItemAdapter(item)[self.images_result_field] = image_path
         return item
 

@@ -9,21 +9,9 @@ from MovieCollect.custom.utils.misc import hash_with_timestamp_random
 
 class taijuu(Spider):
     name = 'taijuu'
-#    sourcesite = '泰剧网'
-#    sourcesite_url = 'https://www.taijuu.com/'
     custom_settings = {'REDIRECT_ENABLED':True, 'DOWNLOAD_TIMEOUT':3, 'RETRY_TIMES':1}
 
-#    start_urls = ['https://www.taijuu.com/list/oumeiju.html',
-#                  'https://www.taijuu.com/list/dongzuopian.html',
-#                  'https://www.taijuu.com/list/xijupian.html',
-#                  'https://www.taijuu.com/list/aiqingpian.html',
-#                  'https://www.taijuu.com/list/kehuanpian.html',
-#                  'https://www.taijuu.com/list/kongbupian.html',
-#                  'https://www.taijuu.com/list/juqingpian.html',
-#                  'https://www.taijuu.com/list/zhanzhengpian.html',
-#            ]
     start_urls = ['https://www.taijuu.com/list/zhanzhengpian.html']
-
 
     def parse(self, response):
         url_prefix, url_suffix = response.url.rsplit('.', 1)

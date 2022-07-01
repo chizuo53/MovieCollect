@@ -14,7 +14,7 @@ NEWSPIDER_MODULE = 'MovieCollect.spiders'
 
 TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'
 
-SPIDER_LOADER_CLASS = 'MovieCollect.custom.singlespiderloader.SpiderLoader'
+SPIDER_LOADER_CLASS = 'MovieCollect.custom.mongospiderloader.SpiderLoader'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -101,12 +101,10 @@ LOG_FORMAT = '%(asctime)s [%(name)s] %(levelname)s: %(message)s'
 SPIDER_LOG_DIR = '/tmp/log/spider/'
 SPIDER_LOG_ERROR = True
 
-CRUD_ERROR_OP = '/tmp/log/crud_error.data'
+CRUD_ERROR_OP_FILE = '/tmp/log/crud_error.data'
 
 #自定义配置
 COMMANDS_MODULE = 'MovieCollect.commands'
-
-DEFAULT_POST_IMG = '/tmp/movie_post/default.jpg'
 
 #MOVIE_FAIL_DATA_DIR = '/tmp/movie_data/'
 
@@ -124,6 +122,17 @@ SPIDER_DETAIL_COLLECTION = 'spider'
 SPIDER_MOVIE_COLLECTION = 'movie'
 CRAWL_STATUS_COLLECTION = 'crawlstatus'
 
-IMAGES_STORE = '/tmp/post/'
+IMAGES_STORE = '/tmp/img/post'
+DEFAULT_POST_IMG = 'default.jpg'
 
 SPIDER_USER_STATUS = ['start', 'terminate', 'pause', 'resume', 'restart', 'delete']
+
+CONCURRENT_ITEMS = 5
+CONCURRENT_REQUESTS = 5
+CONCURRENT_REQUESTS_PER_DOMAIN = 2
+CONCURRENT_REQUESTS_PER_IP = 2
+
+DOWNLOAD_DELAY = 0.25
+REDIRECT_ENABLED = True
+DOWNLOAD_TIMEOUT = 6
+RETRY_TIMES = 1
