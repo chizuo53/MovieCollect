@@ -77,8 +77,8 @@ class start(Worker):
             return result
 
         if getattr(crawl_defer, 'result', None) is not None and issubclass(crawl_defer.result.type, Exception):
-            logger.error(crawler_defer.result.getTraceback())
-            yield deferred_from_coro(self.spider_mongo.change_spider_status(spidername, 'error', crawler_defer.result.getTraceback()))
+            logger.error(crawl_defer.result.getTraceback())
+            yield deferred_from_coro(self.spider_mongo.change_spider_status(spidername, 'error', crawl_defer.result.getTraceback()))
         else:
             message = f'Running spider: {spidername}.'
             self.crawlerprocess.running_crawlers[spidername] = crawler

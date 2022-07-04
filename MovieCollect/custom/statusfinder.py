@@ -1,3 +1,5 @@
+import asyncio
+
 class StatusFinder:
     def __init__(self, crawlerprocess):
         self.settings = crawlerprocess.settings
