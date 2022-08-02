@@ -30,8 +30,8 @@ class SpiderLoader:
         return database_module_prefix + spidername
 
     async def update_code_cacher(self, spidername):
-        code = await self.spider_mongo.get_spider_code(spidername)
-        code_cacher[spidername] = code
+        spider_code = await self.spider_mongo.coll_spider_find_one({'spidername':spidername},{'code':1})
+        code_cacher[spidername] = spider_code['code']
 
     async def preload(self, spidername):
         await self.update_code_cacher(spidername)

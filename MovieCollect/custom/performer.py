@@ -60,7 +60,7 @@ class start(Worker):
         def _done(result):
             if isinstance(result, Failure):
                 status = 'error'
-                message = result.getTraceback()
+                message = f'Error occured while running spider: {spidername}, error msg: result.getTraceback()'
                 LEVEL = logging.ERROR
             elif crawler.terminate:
                 status = 'has_terminated'
@@ -73,19 +73,19 @@ class start(Worker):
             del self.crawlerprocess.running_crawlers[spidername]
             self.crawlerprocess._active.discard(crawl_defer)
             logger.log(LEVEL, message)
-            yield deferred_from_coro(self.spider_mongo.change_spider_status(spidername, status, message))
+            yield deferred_from_coro(self.spider_mongo.coll_spider_update_one({'spidername':spider_name}, {'$set':{'status':status, 'comment':message}}, upsert=False))
             return result
 
         if getattr(crawl_defer, 'result', None) is not None and issubclass(crawl_defer.result.type, Exception):
-            logger.error(crawl_defer.result.getTraceback())
-            yield deferred_from_coro(self.spider_mongo.change_spider_status(spidername, 'error', crawl_defer.result.getTraceback()))
+            logger.error(f'Error occured when try to start spider: {spidername}, error msg: crawl_defer.result.getTraceback()')
+            yield deferred_from_coro(self.spider_mongo.coll_spider_update_one({'spidername':spider_name}, {'$set':{'status':'error', 'comment':crawl_defer.result.getTraceback()}}, upsert=False))
         else:
             message = f'Running spider: {spidername}.'
             self.crawlerprocess.running_crawlers[spidername] = crawler
             self.crawlerprocess._active.add(crawl_defer)
             logger.info(message)
             crawl_defer.addBoth(_done)
-            yield deferred_from_coro(self.spider_mongo.change_spider_status(spidername, 'running', message))
+            yield deferred_from_coro(self.spider_mongo.coll_spider_update_one({'spidername':spider_name}, {'$set':{'status':'running', 'comment':message}}, upsert=False))
 
         
 class terminate(CheckCrawlerRunningMixin, Worker):
@@ -108,7 +108,7 @@ class pause(CheckCrawlerRunningMixin, Worker):
         message = f'Spider: {spidername} has been paused'
         self.crawlerprocess.running_crawlers[spidername].engine.pause()
         logger.info(message)
-        await self.spider_mongo.change_spider_status(spidername, 'has_paused', message)
+        await self.spider_mongo.coll_spider_update_one({'spidername':spider_name}, {'$set':{'status':'has_paused', 'comment':message}}, upsert=False)
 
 
 class resume(CheckCrawlerRunningMixin, Worker):
@@ -121,7 +121,7 @@ class resume(CheckCrawlerRunningMixin, Worker):
         message = f'Spider: {spidername} has been resumed'
         self.crawlerprocess.running_crawlers[spidername].engine.unpause()
         logger.info(message)
-        await self.spider_mongo.change_spider_status(spidername, 'running', message)
+        await self.spider_mongo.coll_spider_update_one({'spidername':spider_name}, {'$set':{'status':'running', 'comment':message}}, upsert=False)
 
 
 class restart(start):
@@ -137,7 +137,7 @@ class restart(start):
         spider_post_dir = os.path.join(self.settings.get('IMAGES_STORE'), spidername)
         delete_dir(spider_log_dir)
         delete_dir(spider_post_dir)
-        yield deferred_from_coro(self.spider_mongo.delete_movie_by_spider(spidername))
+        yield deferred_from_coro(self.spider_mongo.coll_movie_delete_many({'spidername':spidername}))
         logger.info(f'Spider: {spidername} is restarting')
         yield super().change_status(spidername)
 
@@ -162,8 +162,8 @@ class delete(Worker):
         spider_post_dir = os.path.join(self.settings.get('IMAGES_STORE'), spidername)
         delete_dir(spider_log_dir)
         delete_dir(spider_post_dir)
-        await self.spider_mongo.delete_movie_by_spider(spidername)
+        await self.spider_mongo.coll_movie_delete_many({'spidername':spidername})
         logger.info(message)
-        await self.spider_mongo.change_spider_status(spidername, 'has_deleted', message)
+        await self.spider_mongo.coll_spider_update_one({'spidername':spider_name}, {'$set':{'status':'has_deleted', 'comment':message}}, upsert=False)
         
 

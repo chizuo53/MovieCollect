@@ -28,7 +28,7 @@ class MovieImagesPipeline(ImagesPipeline):
     def file_path(self, request, response=None, info=None, *, item=None):
         spidername = item.get('spidername')
         image_guid = hashlib.sha1(to_bytes(request.url)).hexdigest()
-        return f'/{spidername}/full/{image_guid}.jpg'
+        return f'{spidername}/full/{image_guid}.jpg'
 
     def item_completed(self, results, item, info):
         if results:
@@ -49,10 +49,8 @@ class MoviePipeline:
     async def process_item(self, item, spider):
         if isinstance(item, MovieItem):
             movieidentity, spidername, moviename, movieurl, post = item['movieidentity'], spider.name, item['moviename'], item['movieurl'], item['images']
-            result = await self.spider_mongo.add_movie(movieidentity, spidername, moviename, movieurl, post)
-            raise DropItem(f"Finished add movie")
-        else:
-            return item
+            result = await self.spider_mongo.coll_movie_update_one({'movieidentity':movie_identity}, {'$set':{'spidername':spidername, 'moviename':moviename, 'movieurl':movieurl, 'post':post, 'created_time':time.time()}}, upsert=True)
+        return item
 
 
 class MovieLinkPipeline(MoviePipeline):
@@ -60,8 +58,7 @@ class MovieLinkPipeline(MoviePipeline):
     async def process_item(self, item, spider):
         if isinstance(item, MovieLinkItem):
             movieidentity, playername, linkname, linkurl, valid = item['movieidentity'], item['playername'], item['linkname'], item['linkurl'], item['valid']
-            result = await self.spider_mongo.add_movie_link(movieidentity, playername, linkname, linkurl, valid)
-            raise DropItem(f"Finished add movie link")
-        else:
-            return item
+            playerfield = 'player'+'.'+playername+'.'+linkname
+            result = await self.spider_mongo.coll_movie_update_one({'movieidentity':movieidentity}, {'$set':{playerfield:{'linkurl':linkurl, 'valid':valid}}}, upsert=True)
+        return item
 

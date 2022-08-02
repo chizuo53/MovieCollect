@@ -5,6 +5,6 @@ from MovieCollect.custom.crawler import AutoCrawlerProcess
 def execute():
     settings = get_project_settings()
     autocp = AutoCrawlerProcess(settings)
-    autocp.run_spider_loop()
+    autocp.run_loop()
     autocp.start(stop_after_crawl=False)
 

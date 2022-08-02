@@ -28,7 +28,7 @@ class StatusPerformer:
         @defer.inlineCallbacks
         def deal_with_error(failure, spidername, status):
             logger.error(f'Failed to change spider: {spidername} status to {status}', exc_info=failure_to_exc_info(failure))
-            yield deferred_from_coro(self.spider_mongo.change_spider_status(spidername, 'error', failure.getTraceback()))
+            yield deferred_from_coro(self.spider_mongo.coll_spider_update_one({'spidername':spider_name}, {'$set':{'status':'error', 'comment':failure.getTraceback()}}, upsert=False))
             return failure
         
         @defer.inlineCallbacks
