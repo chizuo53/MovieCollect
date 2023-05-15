@@ -1,0 +1,7 @@
+__pycache__/
+**/*.log
+**/*.pyc
+**/*.bak
+**/*.swp
+**/*.bak[0-9]
+**/settings.py
